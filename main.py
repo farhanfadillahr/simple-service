@@ -40,6 +40,7 @@ async def root():
 @app.post("/webhook")
 async def receive_form_data(request: Request):
     form_data = await request.form()
+    print(f"Received form data: {dict(form_data)}")
     return {"received": dict(form_data)}
 
 @app.post("/callback")
