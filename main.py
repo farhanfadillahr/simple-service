@@ -50,10 +50,24 @@ async def duitku_callback(
     signature: str = Form(...),
     publisherOrderId: str = Form(...),
     spUserHash: str = Form(...),
-    settlementDate: datetime = Form(...),
+    settlementDate: str = Form(...),
     issuerCode: str = Form(...)
 ):
     try:
+        print(f"merchantOrderId: {merchantOrderId}")
+        print(f"amount: {amount}")
+        print(f"merchantCode: {merchantCode}")
+        print(f"productDetails: {productDetails}")
+        print(f"additionalParam: {additionalParam}")
+        print(f"paymentCode: {paymentCode}")
+        print(f"resultCode: {resultCode}")
+        print(f"merchantUserId: {merchantUserId}")
+        print(f"reference: {reference}")
+        print(f"signature: {signature}")
+        print(f"publisherOrderId: {publisherOrderId}")
+        print(f"spUserHash: {spUserHash}")
+        print(f"settlementDate: {settlementDate}")
+        print(f"issuerCode: {issuerCode}")
         # Verify Signature
         raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
         expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -88,7 +102,7 @@ async def duitku_callback(
                 "publisher_order_id": publisherOrderId,
                 "merchant_user_id": merchantUserId,
                 "sp_user_hash": spUserHash,
-                "settlement_date": settlementDate.isoformat(),
+                "settlement_date": settlementDate,
                 "paid_at": datetime.now().isoformat(),
                 "issuer_code": issuerCode,
                 
@@ -133,3 +147,4 @@ async def duitku_callback(
     except Exception as e:
         print(f"Error processing callback: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing callback: {str(e)}")
+
