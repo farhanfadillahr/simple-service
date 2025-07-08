@@ -1,6 +1,6 @@
 import hashlib
 import os
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, HTTPException, Form, Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from datetime import datetime
@@ -35,6 +35,12 @@ async def root():
     # supabase_product = SupabaseConnection(table_name="master_products")
     # response = supabase_product.select_all()
     return {"message": "Welcome to Duitku Returns API"}
+
+
+@app.post("/webhook")
+async def receive_form_data(request: Request):
+    form_data = await request.form()
+    return {"received": dict(form_data)}
 
 @app.post("/callback")
 async def duitku_callback(
