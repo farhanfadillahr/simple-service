@@ -17,7 +17,7 @@ DUITKU_URL = os.getenv("DUITKU_BASE_URL")
 
 class DuitkuCallback(BaseModel):
     merchantCode: str
-    amount: int
+    amount: str
     merchantOrderId: str
     productDetail: str
     additionalParam: str = None
@@ -37,16 +37,123 @@ async def root():
     return {"message": "Welcome to Duitku Returns API"}
 
 
-@app.post("/webhook")
+@app.get("/webhook")
 async def receive_form_data(request: Request):
     form_data = await request.form()
-    print(f"Received form data: {dict(form_data)}")
-    return {"received": dict(form_data)}
+    # form_data = {'merchantCode': 'DS23784', 'amount': '575600', 'merchantOrderId': 'INV-160-87724065100-1752016835153', 'productDetail': 'AS GEAR DEPAN GL 100 (SKU: AGDSH05), CDI SUPRA  (SKU: CDIBH08)', 'additionalParam': '', 'resultCode': '00', 'paymentCode': 'BC', 'merchantUserId': '', 'reference': 'DS23784252IH446O5EGONJLM', 'signature': '6db3f7f33ba526d49fe245b447576af4', 'publisherOrderId': 'BC2531WS3CTJEG73KVA', 'settlementDate': '2025-07-11', 'vaNumber': '7007014004420346', 'sourceAccount': ''}
+    merchantOrderId = form_data.get("merchantOrderId")
+    amount = int(form_data.get("amount", 0))  # Convert amount to integer
+    merchantCode = form_data.get("merchantCode")
+    productDetails = form_data.get("productDetails")
+    additionalParam = form_data.get("additionalParam")
+    paymentCode = form_data.get("paymentCode")
+    resultCode = form_data.get("resultCode", "01")
+    merchantUserId = form_data.get("merchantUserId")
+    reference = form_data.get("reference", "")
+    signature = form_data.get("signature")
+    publisherOrderId = form_data.get("publisherOrderId")
+    spUserHash = form_data.get("spUserHash")
+    settlementDate = datetime.strptime(form_data.get("settlementDate", datetime.today().strftime("%Y-%m-%d")), "%Y-%m-%d").isoformat()
+    issuerCode = form_data.get("issuerCode")
+    try:
+        # print(f"merchantOrderId: {merchantOrderId} : {type(merchantOrderId)}")
+        # print(f"amount: {amount} : {type(amount)}")
+        # print(f"merchantCode: {merchantCode} : {type(merchantCode)}")
+        # print(f"productDetails: {productDetails} : {type(productDetails)}")
+        # print(f"additionalParam: {additionalParam} : {type(additionalParam)}")
+        # print(f"paymentCode: {paymentCode} : {type(paymentCode)}")
+        # print(f"resultCode: {resultCode} : {type(resultCode)}")
+        # print(f"merchantUserId: {merchantUserId} : {type(merchantUserId)}")
+        # print(f"reference: {reference} : {type(reference)}")
+        # print(f"signature: {signature} : {type(signature)}")
+        # print(f"publisherOrderId: {publisherOrderId} : {type(publisherOrderId)}")
+        # print(f"spUserHash: {spUserHash} : {type(spUserHash)}")
+        # print(f"settlementDate: {settlementDate} : {type(settlementDate)}")
+        # print(f"issuerCode: {issuerCode} : {type(issuerCode)}")
+        ## Verify Signature
+        raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
+        expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        # print(f"expected_signature: {expected_signature}")
+        # print(f"received_signature: {signature}")
+        if signature != expected_signature:
+            raise HTTPException(status_code=400, detail="Invalid signature")
+
+        # Map resultCode
+        payment_status = {
+            "00": "success",
+            "01": "pending",
+            "02": "failed"
+        }.get(resultCode, "Unknown")
+        
+        order_status = {
+            "00": "processing",
+            "01": "unpaid",
+            "02": "cancelled"
+        }.get(resultCode, "Unknown")
+        
+        # Supabase update payment status
+        supabase_payments = SupabaseConnection(table_name="payments")
+        update_payments = supabase_payments.update_where(
+            conditions={
+                "payment_id": merchantOrderId,
+                "reference": reference
+            }, 
+            new_values={
+                "payment_method": paymentCode,
+                "payment_status": payment_status,
+                "publisher_order_id": publisherOrderId,
+                "merchant_user_id": merchantUserId,
+                "sp_user_hash": spUserHash,
+                "settlement_date": settlementDate,
+                "paid_at": datetime.now().isoformat(),
+                "issuer_code": issuerCode,
+                
+            }
+        )
+        
+        update_order = SupabaseConnection(table_name="orders")
+        update_order.update_where(
+            conditions={
+                'order_id': update_payments.data[0].get("order_id"),
+            },
+            new_values={
+                "status": order_status,
+            }
+        )
+        
+        # print(update_payments.data[0].get("order_id"))
+        print(f"Update payment status: {update_payments}")
+        print(f"Update order status: {update_order}")
+
+        return {
+            "message": "Callback received successfully",
+            "data": {
+                "merchantOrderId": merchantOrderId,
+                "amount": amount,
+                "merchantCode": merchantCode,
+                "productDetails": productDetails,
+                "additionalParam": additionalParam,
+                "paymentCode": paymentCode,
+                "resultCode": resultCode,
+                "merchantUserId": merchantUserId,
+                "reference": reference,
+                "signature": signature,
+                "publisherOrderId": publisherOrderId,
+                "spUserHash": spUserHash,
+                "settlementDate": settlementDate,
+                "issuerCode": issuerCode,
+                "status": payment_status,
+                "status_code": resultCode,
+            }
+        }
+    except Exception as e:
+        print(f"Error processing callback: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing callback: {str(e)}")
 
 @app.post("/callback")
 async def duitku_callback(
     merchantOrderId: str = Form(...),
-    amount: int = Form(...),
+    amount: str = Form(...),
     merchantCode: str = Form(...),
     productDetails: str = Form(...),
     additionalParam: str = Form(...),
@@ -61,20 +168,20 @@ async def duitku_callback(
     issuerCode: str = Form(...)
 ):
     try:
-        print(f"merchantOrderId: {merchantOrderId}")
-        print(f"amount: {amount}")
-        print(f"merchantCode: {merchantCode}")
-        print(f"productDetails: {productDetails}")
-        print(f"additionalParam: {additionalParam}")
-        print(f"paymentCode: {paymentCode}")
-        print(f"resultCode: {resultCode}")
-        print(f"merchantUserId: {merchantUserId}")
-        print(f"reference: {reference}")
-        print(f"signature: {signature}")
-        print(f"publisherOrderId: {publisherOrderId}")
-        print(f"spUserHash: {spUserHash}")
-        print(f"settlementDate: {settlementDate}")
-        print(f"issuerCode: {issuerCode}")
+        # print(f"merchantOrderId: {merchantOrderId}")
+        # print(f"amount: {amount}")
+        # print(f"merchantCode: {merchantCode}")
+        # print(f"productDetails: {productDetails}")
+        # print(f"additionalParam: {additionalParam}")
+        # print(f"paymentCode: {paymentCode}")
+        # print(f"resultCode: {resultCode}")
+        # print(f"merchantUserId: {merchantUserId}")
+        # print(f"reference: {reference}")
+        # print(f"signature: {signature}")
+        # print(f"publisherOrderId: {publisherOrderId}")
+        # print(f"spUserHash: {spUserHash}")
+        # print(f"settlementDate: {settlementDate}")
+        # print(f"issuerCode: {issuerCode}")
         # Verify Signature
         raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
         expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
