@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from datetime import datetime
 from supabase_connection import SupabaseConnection
+from zoneinfo import ZoneInfo
 
 load_dotenv()
 
@@ -73,7 +74,7 @@ async def receive_form_data(request: Request):
                 "merchant_user_id": merchantUserId,
                 "sp_user_hash": spUserHash,
                 "settlement_date": settlementDate,
-                "paid_at": datetime.now().isoformat(),
+                "paid_at": datetime.now(ZoneInfo("Asia/Jakarta")).isoformat(),
                 "issuer_code": issuerCode,
                 
             }
