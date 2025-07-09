@@ -15,21 +15,6 @@ MERCHANT_CODE = os.getenv("DUITKU_MERCHANT_CODE")
 API_KEY = os.getenv("DUITKU_API_KEY")
 DUITKU_URL = os.getenv("DUITKU_BASE_URL")
 
-class DuitkuCallback(BaseModel):
-    merchantCode: str
-    amount: str
-    merchantOrderId: str
-    productDetail: str
-    additionalParam: str = None
-    resultCode: str
-    merchantUserId: str
-    reference: str
-    signature: str
-    publisherOrderId: str
-    spUserHash: str
-    settlementDate: datetime
-    issuerCode: str
-
 @app.get("/")
 async def root():
     # supabase_product = SupabaseConnection(table_name="master_products")
@@ -56,26 +41,8 @@ async def receive_form_data(request: Request):
     settlementDate = datetime.strptime(form_data.get("settlementDate", datetime.today().strftime("%Y-%m-%d")), "%Y-%m-%d").isoformat()
     issuerCode = form_data.get("issuerCode")
     try:
-        # print(f"merchantOrderId: {merchantOrderId} : {type(merchantOrderId)}")
-        # print(f"amount: {amount} : {type(amount)}")
-        # print(f"merchantCode: {merchantCode} : {type(merchantCode)}")
-        # print(f"productDetails: {productDetails} : {type(productDetails)}")
-        # print(f"additionalParam: {additionalParam} : {type(additionalParam)}")
-        # print(f"paymentCode: {paymentCode} : {type(paymentCode)}")
-        # print(f"resultCode: {resultCode} : {type(resultCode)}")
-        # print(f"merchantUserId: {merchantUserId} : {type(merchantUserId)}")
-        # print(f"reference: {reference} : {type(reference)}")
-        # print(f"signature: {signature} : {type(signature)}")
-        # print(f"publisherOrderId: {publisherOrderId} : {type(publisherOrderId)}")
-        # print(f"spUserHash: {spUserHash} : {type(spUserHash)}")
-        # print(f"settlementDate: {settlementDate} : {type(settlementDate)}")
-        # print(f"issuerCode: {issuerCode} : {type(issuerCode)}")
-        # Verify Signature
         raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
-        expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-        print(raw)
-        print(f"expected_signature: {expected_signature}")
-        print(f"received_signature: {signature}")
+        expected_signature = hashlib.md5(raw.encode("utf-8")).hexdigest()
         if signature != expected_signature:
             raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -122,9 +89,9 @@ async def receive_form_data(request: Request):
             }
         )
         
-        # print(update_payments.data[0].get("order_id"))
-        print(f"Update payment status: {update_payments}")
-        print(f"Update order status: {update_order}")
+        # # print(update_payments.data[0].get("order_id"))
+        # print(f"Update payment status: {update_payments}")
+        # print(f"Update order status: {update_order}")
 
         return {
             "message": "Callback received successfully",
@@ -169,23 +136,9 @@ async def duitku_callback(
     issuerCode: str = Form(...)
 ):
     try:
-        # print(f"merchantOrderId: {merchantOrderId}")
-        # print(f"amount: {amount}")
-        # print(f"merchantCode: {merchantCode}")
-        # print(f"productDetails: {productDetails}")
-        # print(f"additionalParam: {additionalParam}")
-        # print(f"paymentCode: {paymentCode}")
-        # print(f"resultCode: {resultCode}")
-        # print(f"merchantUserId: {merchantUserId}")
-        # print(f"reference: {reference}")
-        # print(f"signature: {signature}")
-        # print(f"publisherOrderId: {publisherOrderId}")
-        # print(f"spUserHash: {spUserHash}")
-        # print(f"settlementDate: {settlementDate}")
-        # print(f"issuerCode: {issuerCode}")
         # Verify Signature
         raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
-        expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        expected_signature = hashlib.md5(raw.encode("utf-8")).hexdigest()
         # print(f"expected_signature: {expected_signature}")
         # print(f"received_signature: {signature}")
         if signature != expected_signature:
@@ -234,9 +187,9 @@ async def duitku_callback(
             }
         )
         
-        # print(update_payments.data[0].get("order_id"))
-        print(f"Update payment status: {update_payments}")
-        print(f"Update order status: {update_order}")
+        # # print(update_payments.data[0].get("order_id"))
+        # print(f"Update payment status: {update_payments}")
+        # print(f"Update order status: {update_order}")
 
         return {
             "message": "Callback received successfully",
