@@ -42,7 +42,7 @@ async def receive_form_data(request: Request):
     form_data = await request.form()
     # form_data = {'merchantCode': 'DS23784', 'amount': '575600', 'merchantOrderId': 'INV-160-87724065100-1752016835153', 'productDetail': 'AS GEAR DEPAN GL 100 (SKU: AGDSH05), CDI SUPRA  (SKU: CDIBH08)', 'additionalParam': '', 'resultCode': '00', 'paymentCode': 'BC', 'merchantUserId': '', 'reference': 'DS23784252IH446O5EGONJLM', 'signature': '6db3f7f33ba526d49fe245b447576af4', 'publisherOrderId': 'BC2531WS3CTJEG73KVA', 'settlementDate': '2025-07-11', 'vaNumber': '7007014004420346', 'sourceAccount': ''}
     merchantOrderId = form_data.get("merchantOrderId")
-    amount = int(form_data.get("amount", 0))  # Convert amount to integer
+    amount = form_data.get("amount", 0) # Convert amount to integer
     merchantCode = form_data.get("merchantCode")
     productDetails = form_data.get("productDetails")
     additionalParam = form_data.get("additionalParam")
@@ -56,25 +56,25 @@ async def receive_form_data(request: Request):
     settlementDate = datetime.strptime(form_data.get("settlementDate", datetime.today().strftime("%Y-%m-%d")), "%Y-%m-%d").isoformat()
     issuerCode = form_data.get("issuerCode")
     try:
-        # print(f"merchantOrderId: {merchantOrderId} : {type(merchantOrderId)}")
-        # print(f"amount: {amount} : {type(amount)}")
-        # print(f"merchantCode: {merchantCode} : {type(merchantCode)}")
-        # print(f"productDetails: {productDetails} : {type(productDetails)}")
-        # print(f"additionalParam: {additionalParam} : {type(additionalParam)}")
-        # print(f"paymentCode: {paymentCode} : {type(paymentCode)}")
-        # print(f"resultCode: {resultCode} : {type(resultCode)}")
-        # print(f"merchantUserId: {merchantUserId} : {type(merchantUserId)}")
-        # print(f"reference: {reference} : {type(reference)}")
-        # print(f"signature: {signature} : {type(signature)}")
-        # print(f"publisherOrderId: {publisherOrderId} : {type(publisherOrderId)}")
-        # print(f"spUserHash: {spUserHash} : {type(spUserHash)}")
-        # print(f"settlementDate: {settlementDate} : {type(settlementDate)}")
-        # print(f"issuerCode: {issuerCode} : {type(issuerCode)}")
-        ## Verify Signature
+        print(f"merchantOrderId: {merchantOrderId} : {type(merchantOrderId)}")
+        print(f"amount: {amount} : {type(amount)}")
+        print(f"merchantCode: {merchantCode} : {type(merchantCode)}")
+        print(f"productDetails: {productDetails} : {type(productDetails)}")
+        print(f"additionalParam: {additionalParam} : {type(additionalParam)}")
+        print(f"paymentCode: {paymentCode} : {type(paymentCode)}")
+        print(f"resultCode: {resultCode} : {type(resultCode)}")
+        print(f"merchantUserId: {merchantUserId} : {type(merchantUserId)}")
+        print(f"reference: {reference} : {type(reference)}")
+        print(f"signature: {signature} : {type(signature)}")
+        print(f"publisherOrderId: {publisherOrderId} : {type(publisherOrderId)}")
+        print(f"spUserHash: {spUserHash} : {type(spUserHash)}")
+        print(f"settlementDate: {settlementDate} : {type(settlementDate)}")
+        print(f"issuerCode: {issuerCode} : {type(issuerCode)}")
+        # Verify Signature
         raw = f"{merchantCode}{amount}{merchantOrderId}{API_KEY}"
         expected_signature = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-        # print(f"expected_signature: {expected_signature}")
-        # print(f"received_signature: {signature}")
+        print(f"expected_signature: {expected_signature}")
+        print(f"received_signature: {signature}")
         if signature != expected_signature:
             raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -129,7 +129,7 @@ async def receive_form_data(request: Request):
             "message": "Callback received successfully",
             "data": {
                 "merchantOrderId": merchantOrderId,
-                "amount": amount,
+                "amount": int(amount),
                 "merchantCode": merchantCode,
                 "productDetails": productDetails,
                 "additionalParam": additionalParam,
