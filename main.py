@@ -37,7 +37,7 @@ async def root():
     return {"message": "Welcome to Duitku Returns API"}
 
 
-@app.get("/webhook")
+@app.post("/webhook")
 async def receive_form_data(request: Request):
     form_data = await request.form()
     # form_data = {'merchantCode': 'DS23784', 'amount': '575600', 'merchantOrderId': 'INV-160-87724065100-1752016835153', 'productDetail': 'AS GEAR DEPAN GL 100 (SKU: AGDSH05), CDI SUPRA  (SKU: CDIBH08)', 'additionalParam': '', 'resultCode': '00', 'paymentCode': 'BC', 'merchantUserId': '', 'reference': 'DS23784252IH446O5EGONJLM', 'signature': '6db3f7f33ba526d49fe245b447576af4', 'publisherOrderId': 'BC2531WS3CTJEG73KVA', 'settlementDate': '2025-07-11', 'vaNumber': '7007014004420346', 'sourceAccount': ''}
