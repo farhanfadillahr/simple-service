@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from src.core.config import configs
 from src.utils import singleton
-from src.routes import callback
+from src.routes import callback, order
 from src.middleware import register_middleware
 
 
@@ -25,6 +25,9 @@ class AppCreator:
         
         self.app.include_router(
             callback.callback_router, prefix="/callback", tags=["callback"]
+        )
+        self.app.include_router(
+            order.order_router, prefix="/orders", tags=["orders"]
         )
 
 app_creator = AppCreator()
