@@ -2,9 +2,10 @@ from supabase import create_client, Client
 from typing import Dict, List, Any, Optional
 import logging
 import os
-from dotenv import load_dotenv
+from .config import configs
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,8 @@ class SupabaseConnection:
     
     def __init__(self, table_name: Optional[str] = None):
         self.config = {
-            "url": os.getenv("SUPABASE_URL"),
-            "key": os.getenv("SUPABASE_KEY")
+            "url": configs.supabase_url,
+            "key": configs.supabase_key
         }
         self.table_name: str = table_name
     
@@ -158,3 +159,11 @@ class SupabaseConnection:
         for col, val in conditions.items():
             query = query.eq(col, val)
         return query.execute()
+
+# Global instance
+supabase_db = SupabaseConnection()
+supabase_products = SupabaseConnection(table_name="master_products")
+supabase_cart = SupabaseConnection(table_name="cart")
+supabase_orders = SupabaseConnection(table_name="orders")
+supabase_orders_details = SupabaseConnection(table_name="order_details")
+supabase_payments = SupabaseConnection(table_name="payments")
